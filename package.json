@@ -4,9 +4,6 @@
   "description": "Cursor-based pagination works with TypeORM.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "nyc --reporter=lcov mocha --require ts-node/register test/*.ts",
-    "coverage": "codecov",
-    "test:docker": "docker-compose up -d && npm run test && docker-compose down",
     "build": "rimraf lib && tsc -p tsconfig.build.json",
     "prepublish": "npm run build"
   },
@@ -47,3 +44,4 @@
   },
   "dependencies": {}
 }
+
