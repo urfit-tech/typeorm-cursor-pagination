@@ -1,3 +1,6 @@
+/* eslint-disable no-multiple-empty-lines */
+/* eslint-disable comma-dangle */
+/* eslint-disable quotes */
 import {
   Brackets,
   ObjectLiteral,
@@ -5,7 +8,7 @@ import {
   OrderByCondition,
   SelectQueryBuilder,
   WhereExpressionBuilder,
-} from 'typeorm';
+} from "typeorm";
 
 import {
   atob,
@@ -13,11 +16,11 @@ import {
   encodeByType,
   decodeByType,
   pascalToUnderscore,
-} from './utils';
+} from "./utils";
 
 export enum Order {
-  ASC = 'ASC',
-  DESC = 'DESC',
+  ASC = "ASC",
+  DESC = "DESC",
 }
 
 export type EscapeFn = (name: string) => string;
@@ -53,7 +56,7 @@ export default class Paginator<Entity extends ObjectLiteral> {
 
   public constructor(
     private entity: ObjectType<Entity>,
-    private paginationKeys: Extract<keyof Entity, string>[],
+    private paginationKeys: Extract<keyof Entity, string>[]
   ) {}
 
   public setAlias(alias: string): void {
@@ -77,7 +80,7 @@ export default class Paginator<Entity extends ObjectLiteral> {
   }
 
   public async paginate(
-    builder: SelectQueryBuilder<Entity>,
+    builder: SelectQueryBuilder<Entity>
   ): Promise<PagingResult<Entity>> {
     const entities = await this.appendPagingQuery(builder).getMany();
     const hasMore = entities.length > this.limit;
@@ -113,7 +116,7 @@ export default class Paginator<Entity extends ObjectLiteral> {
   }
 
   private appendPagingQuery(
-    builder: SelectQueryBuilder<Entity>,
+    builder: SelectQueryBuilder<Entity>
   ): SelectQueryBuilder<Entity> {
     const cursors: CursorParam = {};
     const clonedBuilder = new SelectQueryBuilder<Entity>(builder);
@@ -126,7 +129,7 @@ export default class Paginator<Entity extends ObjectLiteral> {
 
     if (Object.keys(cursors).length > 0) {
       clonedBuilder.andWhere(
-        new Brackets((where) => this.buildCursorQuery(where, cursors)),
+        new Brackets((where) => this.buildCursorQuery(where, cursors))
       );
     }
 
@@ -136,27 +139,39 @@ export default class Paginator<Entity extends ObjectLiteral> {
     return clonedBuilder;
   }
 
-  private buildCursorQuery(where: WhereExpressionBuilder, cursors: CursorParam): void {
+  private buildCursorQuery(
+    where: WhereExpressionBuilder,
+    cursors: CursorParam
+  ): void {
     const operator = this.getOperator();
     const params: CursorParam = {};
-    let query = '';
+    let query = "";
     this.paginationKeys.forEach((key) => {
+      // eslint-disable-next-line no-console
+      console.log(typeof this.getPaginationKeyType(key));
       params[key] = cursors[key];
       where.orWhere(`${query}${this.alias}.${key} ${operator} :${key}`, params);
       query = `${query}${this.alias}.${key} = :${key} AND `;
     });
   }
 
+  private getPaginationKeyType<Key extends Extract<keyof Entity, string>>(
+    key: Key
+  ): Entity[Key] {
+    // 此方法不返回实际值，仅用于类型推断
+    return {} as Entity[Key];
+  }
+
   private getOperator(): string {
     if (this.hasAfterCursor()) {
-      return this.order === Order.ASC ? '>' : '<';
+      return this.order === Order.ASC ? ">" : "<";
     }
 
     if (this.hasBeforeCursor()) {
-      return this.order === Order.ASC ? '<' : '>';
+      return this.order === Order.ASC ? "<" : ">";
     }
 
-    return '=';
+    return "=";
   }
 
   private buildOrder(): OrderByCondition {
@@ -189,16 +204,16 @@ export default class Paginator<Entity extends ObjectLiteral> {
         const value = encodeByType(type, entity[key]);
         return `${key}:${value}`;
       })
-      .join(',');
+      .join(",");
 
     return btoa(payload);
   }
 
   private decode(cursor: string): CursorParam {
     const cursors: CursorParam = {};
-    const columns = atob(cursor).split(',');
+    const columns = atob(cursor).split(",");
     columns.forEach((column) => {
-      const [key, raw] = column.split(':');
+      const [key, raw] = column.split(":");
       const type = this.getEntityPropertyType(key);
       const value = decodeByType(type, raw);
       cursors[key] = value;
@@ -209,9 +224,9 @@ export default class Paginator<Entity extends ObjectLiteral> {
 
   private getEntityPropertyType(key: string): string {
     return Reflect.getMetadata(
-      'design:type',
+      "design:type",
       this.entity.prototype,
-      key,
+      key
     ).name.toLowerCase();
   }
 
@@ -226,3 +241,4 @@ export default class Paginator<Entity extends ObjectLiteral> {
     };
   }
 }
+
